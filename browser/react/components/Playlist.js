@@ -21,7 +21,6 @@ class Playlist extends React.Component {
   render () {
 
     const playlist = this.props.selectedPlaylist;
-
     return (
       <div>
         <h3>{ playlist.name }</h3>

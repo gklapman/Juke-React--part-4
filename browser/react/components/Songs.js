@@ -3,10 +3,11 @@ import React from 'react';
 const Songs = (props) => {
 
   const songs = props.songs;
-  const currentSong = props.currentSong;
-  const isPlaying = props.isPlaying;
-  const toggle = props.toggleOne;
+  const currentSong = props.player.currentSong;
+  const isPlaying = props.player.isPlaying;
+  const toggleOne = props.toggleOne;
 
+  console.log('props passed to Songs: ',props);
   return (
     <table className='table'>
       <thead>
@@ -22,7 +23,7 @@ const Songs = (props) => {
           songs && songs.map(song => (
             <tr key={song.id}>
               <td>
-                <button className="btn btn-default btn-xs" onClick={() => toggle(song, songs)}>
+                <button className="btn btn-default btn-xs" onClick={() => {console.log('song/songs',song,songs);toggleOne(song, songs);}}>
                   <span className={song.id === currentSong.id && isPlaying ? "glyphicon glyphicon-pause" : "glyphicon glyphicon-play"}></span>
                 </button>
               </td>

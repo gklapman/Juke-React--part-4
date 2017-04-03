@@ -5,6 +5,9 @@ import { hashHistory } from 'react-router';
 import initialState from '../initialState';
 import AUDIO from '../audio';
 
+import {playThunkCreator, pauseThunkCreator, loadThunkCreator, startSongThunkCreator, toggleOneThunkCreator, toggleThunkCreator, nextThunkCreator, prevThunkCreator} from '../action-creators/player';
+import store from '../store';
+
 import Albums from '../components/Albums.js';
 import Album from '../components/Album';
 import Sidebar from '../components/Sidebar';
@@ -16,7 +19,8 @@ export default class AppContainer extends Component {
 
   constructor (props) {
     super(props);
-    this.state = initialState;
+    this.state = Object.assign({},store.getState(),initialState)
+    console.log('store.getState ',store.getState());
 
     this.toggle = this.toggle.bind(this);
     this.toggleOne = this.toggleOne.bind(this);
@@ -31,6 +35,10 @@ export default class AppContainer extends Component {
   }
 
   componentDidMount () {
+    this.unsubscribe = store.subscribe(() => {
+      const newState = store.getState();
+      this.setState(newState);
+    })
 
     Promise
       .all([
@@ -55,48 +63,41 @@ export default class AppContainer extends Component {
     });
   }
 
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
+
   play () {
-    AUDIO.play();
-    this.setState({ isPlaying: true });
+    console.log('play function invoked in app container');
+    store.dispatch(playThunkCreator());
   }
 
   pause () {
-    AUDIO.pause();
-    this.setState({ isPlaying: false });
+    store.dispatch(pauseThunkCreator());
   }
 
   load (currentSong, currentSongList) {
-    AUDIO.src = currentSong.audioUrl;
-    AUDIO.load();
-    this.setState({
-      currentSong: currentSong,
-      currentSongList: currentSongList
-    });
+    store.dispatch(startSongThunkCreator(currentSong, currentSongList));
   }
 
   startSong (song, list) {
-    this.pause();
-    this.load(song, list);
-    this.play();
+    store.dispatch(startSongThunkCreator(song,list));
   }
 
   toggleOne (selectedSong, selectedSongList) {
-    if (selectedSong.id !== this.state.currentSong.id)
-      this.startSong(selectedSong, selectedSongList);
-    else this.toggle();
+    store.dispatch(toggleOneThunkCreator(selectedSong,selectedSongList));
   }
 
   toggle () {
-    if (this.state.isPlaying) this.pause();
-    else this.play();
+    store.dispatch(toggleThunkCreator());
   }
 
   next () {
-    this.startSong(...skip(1, this.state));
+    store.dispatch(nextThunkCreator());
   }
 
   prev () {
-    this.startSong(...skip(-1, this.state));
+    store.dispatch(prevThunkCreator());
   }
 
   setProgress (progress) {
@@ -184,7 +185,7 @@ export default class AppContainer extends Component {
   }
 
   render () {
-
+    // console.log('this.state is ',this.state);
     const props = Object.assign({}, this.state, {
       toggleOne: this.toggleOne,
       toggle: this.toggle,
@@ -207,10 +208,10 @@ export default class AppContainer extends Component {
         }
         </div>
         <Player
-          currentSong={this.state.currentSong}
-          currentSongList={this.state.currentSongList}
-          isPlaying={this.state.isPlaying}
-          progress={this.state.progress}
+          currentSong={this.state.player.currentSong}
+          currentSongList={this.state.player.currentSongList}
+          isPlaying={this.state.player.isPlaying}
+          progress={this.state.player.progress}
           next={this.next}
           prev={this.prev}
           toggle={this.toggle}
